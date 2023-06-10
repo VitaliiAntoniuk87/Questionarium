@@ -25,6 +25,10 @@ public class QuestionService {
         return questions.get(RANDOM.nextInt(0, questions.size()));
     }
 
+    public List<Question> getAllQuestions() {
+        return questionRepository.getAll();
+    }
+
 
     public Question addQuestion(String questionText, int topicId) {
         return questionRepository.save(Question.builder().text(questionText).topicId(topicId).build());
