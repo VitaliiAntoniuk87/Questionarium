@@ -12,6 +12,51 @@ public class Command {
     private TopicService topicService;
     private QuestionService questionService;
 
+    private final Runnable getRandomQuestion = () -> System.out.println(questionService.getRandomQuestion().getText());
+
+    private final Runnable getRandomQuestionByTopic = () -> {
+        System.out.println("Choose the Topic name from the following list:");
+        List<Topic> allTopics = printTopics();
+        System.out.println("Write the topic name:");
+        String topicName = checkTopicName(allTopics, new Scanner(System.in).next());
+        System.out.println(questionService.getRandomQuestionByTopic(topicName).getText());
+    };
+
+    private final Runnable getTopics = () -> {
+        System.out.println("Requested topic List:");
+        printTopics();
+    };
+
+    private final Runnable addNewQuestion = () -> {
+        System.out.println("Choose the topic you want add question in:");
+        List<Topic> allTopics = printTopics();
+        System.out.println("Write the topic name:");
+        String topicName = checkTopicName(allTopics, new Scanner(System.in).next());
+        int topicId = 0;
+        for (Topic topic : allTopics) {
+            if (topic.getName().equals(topicName)) {
+                topicId = topic.getId();
+            }
+        }
+        System.out.println("Oke. Now write down your question:");
+        String newQuestion = new Scanner(System.in).next();
+        questionService.addQuestion(newQuestion, topicId);
+    };
+
+    private final Runnable deleteQuestion = () -> {
+        System.out.println("Question list:");
+        List<Question> allQuestions = questionService.getAllQuestions();
+        allQuestions.forEach(e -> System.out.println(e.getId() + ". " + e.getText()));
+        System.out.println("Write question number to delete it:");
+        Question question = getQuestionById(allQuestions, new Scanner(System.in).nextInt());
+        questionService.deleteQuestion(Objects.requireNonNull(question));
+    };
+
+    private final Runnable addNewTopic = () -> {
+        System.out.println("Please write name for new topic:");
+        topicService.addTopic(new Scanner(System.in).next());
+    };
+
     public Command(TopicService topicService, QuestionService questionService) {
         this.topicService = topicService;
         this.questionService = questionService;
@@ -37,51 +82,6 @@ public class Command {
 
         commandLine.get(command).run();
     }
-
-    Runnable getRandomQuestion = () -> System.out.println(questionService.getRandomQuestion().getText());
-
-    Runnable getRandomQuestionByTopic = () -> {
-        System.out.println("Choose the Topic name from the following list:");
-        List<Topic> allTopics = printTopics();
-        System.out.println("Write the topic name:");
-        String topicName = checkTopicName(allTopics, new Scanner(System.in).next());
-        System.out.println(questionService.getRandomQuestionByTopic(topicName).getText());
-    };
-
-    Runnable getTopics = () -> {
-        System.out.println("Requested topic List:");
-        printTopics();
-    };
-
-    Runnable addNewQuestion = () -> {
-        System.out.println("Choose the topic you want add question in:");
-        List<Topic> allTopics = printTopics();
-        System.out.println("Write the topic name:");
-        String topicName = checkTopicName(allTopics, new Scanner(System.in).next());
-        int topicId = 0;
-        for (Topic topic : allTopics) {
-            if (topic.getName().equals(topicName)) {
-                topicId = topic.getId();
-            }
-        }
-        System.out.println("Oke. Now write down your question:");
-        String newQuestion = new Scanner(System.in).next();
-        questionService.addQuestion(newQuestion, topicId);
-    };
-
-    Runnable deleteQuestion = () -> {
-        System.out.println("Question list:");
-        List<Question> allQuestions = questionService.getAllQuestions();
-        allQuestions.forEach(e -> System.out.println(e.getId() + ". " + e.getText()));
-        System.out.println("Write question number to delete it:");
-        Question question = getQuestionById(allQuestions, new Scanner(System.in).nextInt());
-        questionService.deleteQuestion(Objects.requireNonNull(question));
-    };
-
-    Runnable addNewTopic = () -> {
-        System.out.println("Please write name for new topic:");
-        topicService.addTopic(new Scanner(System.in).next());
-    };
 
     private String checkTopicName(List<Topic> topics, String topicName) {
         boolean isNameCorrect = false;
@@ -141,6 +141,4 @@ public class Command {
         }
         return allTopics;
     }
-
-
 }
