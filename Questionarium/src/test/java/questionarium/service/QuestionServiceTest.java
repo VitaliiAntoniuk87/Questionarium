@@ -4,6 +4,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import questionarium.model.Question;
 
+import java.util.List;
+
 public class QuestionServiceTest {
 
     private final QuestionDaoMock questionDaoMock = new QuestionDaoMock();
@@ -47,5 +49,14 @@ public class QuestionServiceTest {
         int listSizeExpected = questionDaoMock.questions.size();
 
         Assert.assertEquals(listSizeExpected + 1, listSizeActual);
+    }
+
+    @Test
+    public void getAllQuestionsTest() {
+        QuestionService questionService = new QuestionService(questionDaoMock);
+        List<Question> actual = questionDaoMock.questions;
+        List<Question> expected = questionService.getAllQuestions();
+
+        Assert.assertEquals(expected, actual);
     }
 }

@@ -1,12 +1,10 @@
 package questionarium.repository;
 
+import questionarium.exception.*;
 import questionarium.model.Topic;
 import questionarium.repository.dao.TopicRepository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,7 +46,7 @@ public class TopicRepositoryImpl implements TopicRepository {
     @Override
     public Topic save(Topic topic) {
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement(SAVE);
+            PreparedStatement preparedStatement = connection.prepareStatement(SAVE, Statement.RETURN_GENERATED_KEYS);
             preparedStatement.setString(1, topic.getName());
             preparedStatement.execute();
             ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
@@ -57,7 +55,7 @@ public class TopicRepositoryImpl implements TopicRepository {
             return topic;
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SqlAddObjectException("cannot save Topic object to DB");
         }
     }
 
@@ -75,7 +73,7 @@ public class TopicRepositoryImpl implements TopicRepository {
                     .build();
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SqlGetObjectException("cannot get Topic object");
         }
     }
 
@@ -96,7 +94,7 @@ public class TopicRepositoryImpl implements TopicRepository {
             return topics;
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SqlGetFewObjectsException("cannot get few Topic objects");
         }
     }
 
@@ -108,7 +106,7 @@ public class TopicRepositoryImpl implements TopicRepository {
             return preparedStatement.execute();
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SqlRemovalException("Cant remove Topic");
         }
     }
 
@@ -121,7 +119,7 @@ public class TopicRepositoryImpl implements TopicRepository {
             return preparedStatement.executeUpdate();
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SqlUpdateException("Cannot update Topic object");
         }
     }
 }

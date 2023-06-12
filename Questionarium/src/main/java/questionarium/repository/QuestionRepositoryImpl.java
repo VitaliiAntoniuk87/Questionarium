@@ -1,12 +1,10 @@
 package questionarium.repository;
 
+import questionarium.exception.*;
 import questionarium.model.Question;
 import questionarium.repository.dao.QuestionRepository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,7 +61,7 @@ public class QuestionRepositoryImpl implements QuestionRepository {
             return getQuestions(preparedStatement);
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SqlGetFewObjectsException("cannot get few Question objects by Topic");
         }
     }
 
@@ -74,7 +72,7 @@ public class QuestionRepositoryImpl implements QuestionRepository {
             return getQuestions(preparedStatement);
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SqlGetFewObjectsException("cannot get few Question objects");
         }
 
     }
@@ -97,7 +95,7 @@ public class QuestionRepositoryImpl implements QuestionRepository {
     @Override
     public Question save(Question question) {
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement(SAVE);
+            PreparedStatement preparedStatement = connection.prepareStatement(SAVE, Statement.RETURN_GENERATED_KEYS);
             preparedStatement.setString(1, question.getText());
             preparedStatement.setInt(2, question.getTopicId());
             preparedStatement.execute();
@@ -108,7 +106,7 @@ public class QuestionRepositoryImpl implements QuestionRepository {
             return question;
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SqlAddObjectException("cannot save Question object to DB");
         }
     }
 
@@ -128,7 +126,7 @@ public class QuestionRepositoryImpl implements QuestionRepository {
                     .build();
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SqlGetObjectException("cannot get Question object");
         }
     }
 
@@ -140,7 +138,7 @@ public class QuestionRepositoryImpl implements QuestionRepository {
             return preparedStatement.execute();
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SqlRemovalException("Cant remove Question");
         }
     }
 
@@ -155,7 +153,7 @@ public class QuestionRepositoryImpl implements QuestionRepository {
             return preparedStatement.executeUpdate();
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SqlUpdateException("Cannot update Question object");
         }
     }
 }
