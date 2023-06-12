@@ -7,12 +7,16 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TopicRepositoryImpl implements TopicRepository {
 
     private final Connection connection;
 
     private static final String SELECT_BY_ID = "SELECT * FROM public.topic WHERE id = ?";
+
+    private static final String SELECT_ALL = "SELECT * FROM public.topic";
 
     private static final String SAVE =
             """
@@ -42,11 +46,15 @@ public class TopicRepositoryImpl implements TopicRepository {
     }
 
     @Override
-    public boolean save(Topic topic) {
+    public Topic save(Topic topic) {
         try {
             PreparedStatement preparedStatement = connection.prepareStatement(SAVE);
             preparedStatement.setString(1, topic.getName());
-            return preparedStatement.execute();
+            preparedStatement.execute();
+            ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+            generatedKeys.next();
+            topic.setId(generatedKeys.getInt(1));
+            return topic;
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -65,6 +73,27 @@ public class TopicRepositoryImpl implements TopicRepository {
                     .id(resultSet.getInt(1))
                     .name(resultSet.getString(2))
                     .build();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public List<Topic> getAll() {
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ALL);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            List<Topic> topics = new ArrayList<>();
+
+            while (resultSet.next()) {
+                Topic build = Topic.builder()
+                        .id(resultSet.getInt(1))
+                        .name(resultSet.getString(2))
+                        .build();
+                topics.add(build);
+            }
+            return topics;
 
         } catch (SQLException e) {
             throw new RuntimeException(e);

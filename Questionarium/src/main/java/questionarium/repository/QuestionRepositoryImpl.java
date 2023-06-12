@@ -7,12 +7,24 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class QuestionRepositoryImpl implements QuestionRepository {
 
     private final Connection connection;
 
     private static final String SELECT_BY_ID = "SELECT * FROM public.question WHERE id = ?";
+
+    private static final String SELECT_ALL = "SELECT * FROM public.question";
+
+    private static final String SELECT_ALL_BY_TOPIC_NAME =
+            """
+                            SELECT question.id,text,topic_id,
+                            name FROM public.question
+                            FULL JOIN public.topic ON
+                            question.topic_id = topic.id WHERE name = ?
+                    """;
 
     private static final String SAVE =
             """
@@ -21,12 +33,14 @@ public class QuestionRepositoryImpl implements QuestionRepository {
                             VALUES (?, ?)
                     """;
 
+
     private static final String REMOVE_BY_ID =
             """
                             DELETE FROM public.question
                             WHERE id = ?
                                         
                     """;
+
 
     private static final String UPDATE =
             """
@@ -42,18 +56,62 @@ public class QuestionRepositoryImpl implements QuestionRepository {
     }
 
     @Override
-    public boolean save(Question question) {
+    public List<Question> getAllByTopicName(String topicName) {
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement(SAVE);
-            preparedStatement.setString(1, question.getText());
-            preparedStatement.setInt(2, question.getTopicId());
-            return preparedStatement.execute();
+            PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ALL_BY_TOPIC_NAME);
+            preparedStatement.setString(1, topicName);
+            return getQuestions(preparedStatement);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public List<Question> getAll() {
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ALL);
+            return getQuestions(preparedStatement);
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
 
     }
+
+    private List<Question> getQuestions(PreparedStatement preparedStatement) throws SQLException {
+        ResultSet resultSet = preparedStatement.executeQuery();
+        ArrayList<Question> questions = new ArrayList<>();
+
+        while (resultSet.next()) {
+            questions.add(Question.builder()
+                    .id(resultSet.getInt(1))
+                    .text(resultSet.getString(2))
+                    .topicId(resultSet.getInt(3))
+                    .build()
+            );
+        }
+        return questions;
+    }
+
+    @Override
+    public Question save(Question question) {
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(SAVE);
+            preparedStatement.setString(1, question.getText());
+            preparedStatement.setInt(2, question.getTopicId());
+            preparedStatement.execute();
+
+            ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+            generatedKeys.next();
+            question.setId(generatedKeys.getInt(1));
+            return question;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     @Override
     public Question get(int id) {
@@ -85,6 +143,7 @@ public class QuestionRepositoryImpl implements QuestionRepository {
             throw new RuntimeException(e);
         }
     }
+
 
     @Override
     public int update(Question question) {
